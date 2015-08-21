@@ -51,14 +51,14 @@ public final class Util {
 	 * Throws OpenGLException if glGetError() returns anything else than GL_NO_ERROR
 	 *
 	 */
-	public static void checkGLError() throws OpenGLException {
-		if ( ContextCapabilities.DEBUG && GLContext.getCapabilities().tracker.isBeginEnd() ) // Do not call GetError inside a Begin/End pair.
-			return;
-		int err = glGetError();
-		if ( err != GL_NO_ERROR ) {
-			throw new OpenGLException(err);
-		}
-	}
+//	public static void checkGLError() throws OpenGLException {
+//		if ( ContextCapabilities.DEBUG && GLContext.getCapabilities().tracker.isBeginEnd() ) // Do not call GetError inside a Begin/End pair.
+//			return;
+//		int err = glGetError();
+//		if ( err != GL_NO_ERROR ) {
+//			throw new OpenGLException(err);
+//		}
+//	}
 
 	/**
 	 * Translate a GL error code to a String describing the error

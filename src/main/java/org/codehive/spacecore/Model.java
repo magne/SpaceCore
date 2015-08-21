@@ -1,6 +1,6 @@
 package org.codehive.spacecore;
 
-import silvertiger.tutorial.lwjgl.math.Vector3f;
+import org.lwjgl.util.vector.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;

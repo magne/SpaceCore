@@ -2,12 +2,10 @@ package org.codehive.spacecore;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.NoRouteToHostException;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.input.Keyboard;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.*;
-import org.lwjgl.util.vector.Vector;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,13 +23,16 @@ public class PlayerShip
     
     // Pitch and rolls
     private float Pitch, Roll;
-    
+
+    float dPitch = 0;
+    float dRoll = 0;
+
     // TEST VARIABLE
     Quaternion QResult;
     
     // Ship variable
     Model model = null;
-    
+
     // Player ship has a current velocity and target velocity
     float RealVelocity, TargetVelocity;
     
@@ -48,12 +49,15 @@ public class PlayerShip
     {
         // Default data
         InitShip();
-        
+
+        final String file = "resources/spacecore/Sample.obj";
         try {
-            model = OBJLoader.loadModel(new File("src/Sample.obj"));
+            model = OBJLoader.loadModel(new File(file));
         } catch (FileNotFoundException e) {
+            System.err.println("File not found: '" + file + "'");
             System.exit(1);
         } catch (IOException e) {
+            e.printStackTrace();
             System.exit(1);
         }
     }
@@ -79,6 +83,51 @@ public class PlayerShip
         Bounced = false;
         Crashed = false;
     }
+
+    public void keyboard(long window, int key, int scancode, int action, int mods)
+    {
+        if (action == GLFW.GLFW_PRESS) {
+            // Possible angle change
+            dPitch = 0;
+            dRoll = 0;
+
+            switch (key) {
+                // Changing pitch and roll (Pitch is on Z axis)
+                case GLFW.GLFW_KEY_W:
+                    dPitch -= 0.03;
+                    break;
+                case GLFW.GLFW_KEY_S:
+                    dPitch += 0.03;
+                    break;
+
+                // Roll is on post-pitch X axis
+                case GLFW.GLFW_KEY_A:
+                    dRoll += 0.05;
+                    break;
+                case GLFW.GLFW_KEY_D:
+                    dRoll -= 0.05;
+                    break;
+
+                // Update velocities
+                case GLFW.GLFW_KEY_R:
+                    TargetVelocity += VEL_dMAX;
+                    break;
+                case GLFW.GLFW_KEY_F:
+                    TargetVelocity -= VEL_dMAX;
+                    break;
+            }
+
+            // Bounds check the target velocity
+            if(TargetVelocity > VEL_MAX)
+                TargetVelocity = VEL_MAX;
+            else if(TargetVelocity < 0.0f)
+                TargetVelocity = 0;
+
+            // Save the total pitch and roll
+            Pitch += dPitch;
+            Roll += dRoll;
+        }
+    }
     
     // Check for user events
     public void Update()
@@ -90,44 +139,12 @@ public class PlayerShip
             InitShip();
         }
         
-        // Possible angle change
-        float dPitch = 0;
-        float dRoll = 0;
-        
-        // Changing pitch and roll (Pitch is on Z axis)
-        if(Keyboard.isKeyDown(Keyboard.KEY_W))
-            dPitch -= 0.03;
-        if(Keyboard.isKeyDown(Keyboard.KEY_S))
-            dPitch += 0.03;
-        
-        // Roll is on post-pitch X acis
-        if(Keyboard.isKeyDown(Keyboard.KEY_A))
-            dRoll += 0.05;
-        if(Keyboard.isKeyDown(Keyboard.KEY_D))
-            dRoll -= 0.05;
-        
-        // Update velocities
-        if(Keyboard.isKeyDown(Keyboard.KEY_R))
-            TargetVelocity += VEL_dMAX;
-        if(Keyboard.isKeyDown(Keyboard.KEY_F))
-            TargetVelocity -= VEL_dMAX;
-        
-        // Bounds check the target velocity
-        if(TargetVelocity > VEL_MAX)
-            TargetVelocity = VEL_MAX;
-        else if(TargetVelocity < 0.0f)
-            TargetVelocity = 0;
-        
         // Update the real velocity over time
         // NOTE: The delta has to be smaller than the target velocity
         if(TargetVelocity > RealVelocity)
             RealVelocity += VEL_dMAX * 0.5f;
         else if(TargetVelocity < RealVelocity)
             RealVelocity -= VEL_dMAX * 0.5f;
-        
-        // Save the total pitch and roll
-        Pitch += dPitch;
-        Roll += dRoll;
         
         /*** EULER APPROACH with pure angles (bad) ***/
         
@@ -198,7 +215,7 @@ public class PlayerShip
         Buffer.put(QMatrix);
         Buffer.position(0);
         
-        GL11.glMultMatrix(Buffer);
+        GL11.glMultMatrixf(Buffer);
         
         GL11.glLineWidth(2.0f);
         GL11.glBegin(GL11.GL_LINES);

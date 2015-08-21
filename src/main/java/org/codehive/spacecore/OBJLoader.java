@@ -1,6 +1,7 @@
 package org.codehive.spacecore;
 
-import silvertiger.tutorial.lwjgl.math.Vector3f;
+
+import org.lwjgl.util.vector.Vector3f;
 
 import java.io.*;
 
@@ -36,8 +37,10 @@ public class OBJLoader {
         try {
             model = OBJLoader.loadModel(new File(fileString));
         } catch (FileNotFoundException e) {
+            System.err.println("File not found: '" + fileString + "'");
             System.exit(1);
         } catch (IOException e) {
+            e.printStackTrace();
             System.exit(1);
         }
         return model;

@@ -1,6 +1,9 @@
  apply plugin: 'java'
 
- project.ext.lwjglVersion = '3.0.0a'
+ project.ext {
+    lwjglVersion = '3.0.0a'
+    jomlVersion = '1.5.0'
+ }
 
  repositories {
     mavenCentral()
@@ -12,6 +15,7 @@ dependencies {
     compile "org.lwjgl:lwjgl-platform:${lwjglVersion}:natives-windows"
     compile "org.lwjgl:lwjgl-platform:${lwjglVersion}:natives-linux"
     compile "org.lwjgl:lwjgl-platform:${lwjglVersion}:natives-osx"
+    compile "org.joml:joml:${jomlVersion}"
 }
 
 task wrapper(type: Wrapper) {
