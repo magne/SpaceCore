@@ -138,7 +138,6 @@ public class Main {
         /* GLFW has to be terminated or else the application will run in background */
         // Terminate GLFW and release the GLFWerrorfun
         glfwTerminate();
-        keyCallback.release();
         errorCallback.release();
     }
 

@@ -4,6 +4,7 @@ import org.lwjgl.opengl.GL11;
 import static org.lwjgl.opengl.GL11.*;
 import org.lwjgl.util.vector.Vector3f;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 // Star point
@@ -33,10 +34,10 @@ public class World
     public static float WorldSize = 1024.0f;
 
     // List of stars (list of Vector3f)
-    ArrayList<StarPoint> StarList;
+    List<StarPoint> StarList;
 
     // Load a bunch of objects
-    ArrayList<Models> ModelList;
+    List<Models> ModelList;
 
     public World()
     {
@@ -100,36 +101,36 @@ public class World
     {
         // Rotate (yaw) as needed so the player always faces non-corners
         GL11.glPushMatrix();
+        {
+            // Rotate and translate
+            GL11.glTranslatef(Pos.x, Pos.y, Pos.z);
+            GL11.glRotatef(Yaw, 0f, 1f, 0f);
 
-        // Rotate and translate
-        GL11.glTranslatef(Pos.x, Pos.y, Pos.z);
-        GL11.glRotatef(Yaw, 0f, 1f, 0f);
-
-        // Render the skybox and stars
-        RenderSkybox();
-
+            // Render the skybox and stars
+            RenderSkybox();
+        }
         // Be done
         GL11.glPopMatrix();
 
         // Render out the stars
         GL11.glPushMatrix();
-
-        // Show stars
-        GL11.glTranslatef(Pos.x, Pos.y * 0.99f, Pos.z);
-        RenderStars();
-
+        {
+            // Show stars
+            GL11.glTranslatef(Pos.x, Pos.y * 0.99f, Pos.z);
+            RenderStars();
+        }
         // Be done
         GL11.glPopMatrix();
 
         // Draw stars
         GL11.glPushMatrix();
+        {
+            // Render ground and right below
+            GL11.glTranslatef(Pos.x, 0, Pos.z);
 
-        // Render ground and right below
-        GL11.glTranslatef(Pos.x, 0, Pos.z);
-
-        Vector3f Color = new Vector3f(236.0f / 255.0f, 200.0f / 255.0f, 122.0f / 255.0f);
-        RenderGround(WorldSize, Color);
-
+            Vector3f Color = new Vector3f(236.0f / 255.0f, 200.0f / 255.0f, 122.0f / 255.0f);
+            RenderGround(WorldSize, Color);
+        }
         GL11.glPopMatrix();
 
         // Render all the objects
@@ -155,10 +156,12 @@ public class World
         // Set the ship color to red for now
         GL11.glColor3f(Color.x, Color.y, Color.z);
         GL11.glBegin(GL11.GL_QUADS);
-        GL11.glVertex3f(-WorldLength, 0, -WorldLength);
-        GL11.glVertex3f(WorldLength, 0, -WorldLength);
-        GL11.glVertex3f(WorldLength, 0, WorldLength);
-        GL11.glVertex3f(-WorldLength, 0, WorldLength);
+        {
+            GL11.glVertex3f(-WorldLength, 0, -WorldLength);
+            GL11.glVertex3f(WorldLength, 0, -WorldLength);
+            GL11.glVertex3f(WorldLength, 0, WorldLength);
+            GL11.glVertex3f(-WorldLength, 0, WorldLength);
+        }
         GL11.glEnd();
 
         // Done
@@ -177,71 +180,71 @@ public class World
 
         // Draw out top side
         glBegin(GL_QUADS);
-
-        // Polygon & texture map
-        // Top has one constant color
-        glColor3f(TopColor.x, TopColor.y, TopColor.z);
-        glVertex3f(-SkyboxSize, SkyboxSize, -SkyboxSize);
-        glVertex3f(SkyboxSize, SkyboxSize, -SkyboxSize);
-        glVertex3f(SkyboxSize, SkyboxSize, SkyboxSize);
-        glVertex3f(-SkyboxSize, SkyboxSize, SkyboxSize);
-
+        {
+            // Polygon & texture map
+            // Top has one constant color
+            glColor3f(TopColor.x, TopColor.y, TopColor.z);
+            glVertex3f(-SkyboxSize, SkyboxSize, -SkyboxSize);
+            glVertex3f(SkyboxSize, SkyboxSize, -SkyboxSize);
+            glVertex3f(SkyboxSize, SkyboxSize, SkyboxSize);
+            glVertex3f(-SkyboxSize, SkyboxSize, SkyboxSize);
+        }
         glEnd();
 
         // Drow out the left side
         glBegin(GL_QUADS);
-
-        // Polygon & texture map
-        glColor3f(TopColor.x, TopColor.y, TopColor.z);
-        glVertex3f(SkyboxSize, SkyboxSize, -SkyboxSize);
-        glColor3f(BottomColor.x, BottomColor.y, BottomColor.z);
-        glVertex3f(SkyboxSize, -SkyboxSize, -SkyboxSize);
-        glVertex3f(SkyboxSize, -SkyboxSize, SkyboxSize);
-        glColor3f(TopColor.x, TopColor.y, TopColor.z);
-        glVertex3f(SkyboxSize, SkyboxSize, SkyboxSize);
-
+        {
+            // Polygon & texture map
+            glColor3f(TopColor.x, TopColor.y, TopColor.z);
+            glVertex3f(SkyboxSize, SkyboxSize, -SkyboxSize);
+            glColor3f(BottomColor.x, BottomColor.y, BottomColor.z);
+            glVertex3f(SkyboxSize, -SkyboxSize, -SkyboxSize);
+            glVertex3f(SkyboxSize, -SkyboxSize, SkyboxSize);
+            glColor3f(TopColor.x, TopColor.y, TopColor.z);
+            glVertex3f(SkyboxSize, SkyboxSize, SkyboxSize);
+        }
         glEnd();
 
         // Drow out the right side
         glBegin(GL_QUADS);
-
-        // Polygon & texture map
-        glColor3f(TopColor.x, TopColor.y, TopColor.z);
-        glVertex3f(-SkyboxSize, SkyboxSize, SkyboxSize);
-        glColor3f(BottomColor.x, BottomColor.y, BottomColor.z);
-        glVertex3f(-SkyboxSize, -SkyboxSize, SkyboxSize);
-        glVertex3f(-SkyboxSize, -SkyboxSize, -SkyboxSize);
-        glColor3f(TopColor.x, TopColor.y, TopColor.z);
-        glVertex3f(-SkyboxSize, SkyboxSize, -SkyboxSize);
-
+        {
+            // Polygon & texture map
+            glColor3f(TopColor.x, TopColor.y, TopColor.z);
+            glVertex3f(-SkyboxSize, SkyboxSize, SkyboxSize);
+            glColor3f(BottomColor.x, BottomColor.y, BottomColor.z);
+            glVertex3f(-SkyboxSize, -SkyboxSize, SkyboxSize);
+            glVertex3f(-SkyboxSize, -SkyboxSize, -SkyboxSize);
+            glColor3f(TopColor.x, TopColor.y, TopColor.z);
+            glVertex3f(-SkyboxSize, SkyboxSize, -SkyboxSize);
+        }
         glEnd();
 
         // Drow out the front side
         glBegin(GL_QUADS);
-
-        // Polygon & texture map
-        glColor3f(TopColor.x, TopColor.y, TopColor.z);
-        glVertex3f(SkyboxSize, SkyboxSize, SkyboxSize);
-        glColor3f(BottomColor.x, BottomColor.y, BottomColor.z);
-        glVertex3f(SkyboxSize, -SkyboxSize, SkyboxSize);
-        glVertex3f(-SkyboxSize, -SkyboxSize, SkyboxSize);
-        glColor3f(TopColor.x, TopColor.y, TopColor.z);
-        glVertex3f(-SkyboxSize, SkyboxSize, SkyboxSize);
-
+        {
+            // Polygon & texture map
+            glColor3f(TopColor.x, TopColor.y, TopColor.z);
+            glVertex3f(SkyboxSize, SkyboxSize, SkyboxSize);
+            glColor3f(BottomColor.x, BottomColor.y, BottomColor.z);
+            glVertex3f(SkyboxSize, -SkyboxSize, SkyboxSize);
+            glVertex3f(-SkyboxSize, -SkyboxSize, SkyboxSize);
+            glColor3f(TopColor.x, TopColor.y, TopColor.z);
+            glVertex3f(-SkyboxSize, SkyboxSize, SkyboxSize);
+        }
         glEnd();
 
         // Drow out the back side
         glBegin(GL_QUADS);
-
-        // Polygon & texture map
-        glColor3f(TopColor.x, TopColor.y, TopColor.z);
-        glVertex3f(-SkyboxSize, SkyboxSize, -SkyboxSize);
-        glColor3f(BottomColor.x, BottomColor.y, BottomColor.z);
-        glVertex3f(-SkyboxSize, -SkyboxSize, -SkyboxSize);
-        glVertex3f(SkyboxSize, -SkyboxSize, -SkyboxSize);
-        glColor3f(TopColor.x, TopColor.y, TopColor.z);
-        glVertex3f(SkyboxSize, SkyboxSize, -SkyboxSize);
-
+        {
+            // Polygon & texture map
+            glColor3f(TopColor.x, TopColor.y, TopColor.z);
+            glVertex3f(-SkyboxSize, SkyboxSize, -SkyboxSize);
+            glColor3f(BottomColor.x, BottomColor.y, BottomColor.z);
+            glVertex3f(-SkyboxSize, -SkyboxSize, -SkyboxSize);
+            glVertex3f(SkyboxSize, -SkyboxSize, -SkyboxSize);
+            glColor3f(TopColor.x, TopColor.y, TopColor.z);
+            glVertex3f(SkyboxSize, SkyboxSize, -SkyboxSize);
+        }
         glEnd();
 
         // Place back matrix
@@ -257,7 +260,9 @@ public class World
             glPointSize(Star.Scale);
             glColor3f(Star.Color.x, Star.Color.y, Star.Color.z);
             glBegin(GL_POINTS);
-            glVertex3f(Star.Pt.x, Star.Pt.y, Star.Pt.z);
+            {
+                glVertex3f(Star.Pt.x, Star.Pt.y, Star.Pt.z);
+            }
             glEnd();
         }
     }

@@ -24,21 +24,21 @@ public class PlayerShip
     // Pitch and rolls
     private float Pitch, Roll;
 
-    float dPitch = 0;
-    float dRoll = 0;
+    private float dPitch;
+    private float dRoll;
 
     // TEST VARIABLE
     Quaternion QResult;
     
     // Ship variable
-    Model model = null;
+    Model model;
 
     // Player ship has a current velocity and target velocity
     float RealVelocity, TargetVelocity;
     
     // Velocities
-    public static float VEL_dMAX = 0.005f;
-    public static float VEL_MAX = 0.15f;
+    public static final float VEL_dMAX = 0.005f;
+    public static final float VEL_MAX = 0.15f;
     
     // Did we crash or bounce?
     boolean Bounced;
@@ -51,15 +51,7 @@ public class PlayerShip
         InitShip();
 
         final String file = "resources/spacecore/Sample.obj";
-        try {
-            model = OBJLoader.loadModel(new File(file));
-        } catch (FileNotFoundException e) {
-            System.err.println("File not found: '" + file + "'");
-            System.exit(1);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
+        model = OBJLoader.load(file);
     }
     
     public void InitShip()
@@ -79,7 +71,7 @@ public class PlayerShip
         RealVelocity = TargetVelocity = 0;
         Pitch = Roll = 0.0f;
         
-        // No nown states
+        // No known states
         Bounced = false;
         Crashed = false;
     }
@@ -94,25 +86,31 @@ public class PlayerShip
             switch (key) {
                 // Changing pitch and roll (Pitch is on Z axis)
                 case GLFW.GLFW_KEY_W:
+                case GLFW.GLFW_KEY_DOWN:
                     dPitch -= 0.03;
                     break;
                 case GLFW.GLFW_KEY_S:
+                case GLFW.GLFW_KEY_UP:
                     dPitch += 0.03;
                     break;
 
                 // Roll is on post-pitch X axis
                 case GLFW.GLFW_KEY_A:
+                case GLFW.GLFW_KEY_LEFT:
                     dRoll += 0.05;
                     break;
                 case GLFW.GLFW_KEY_D:
+                case GLFW.GLFW_KEY_RIGHT:
                     dRoll -= 0.05;
                     break;
 
                 // Update velocities
                 case GLFW.GLFW_KEY_R:
+                case GLFW.GLFW_KEY_PAGE_UP:
                     TargetVelocity += VEL_dMAX;
                     break;
                 case GLFW.GLFW_KEY_F:
+                case GLFW.GLFW_KEY_PAGE_DOWN:
                     TargetVelocity -= VEL_dMAX;
                     break;
             }
@@ -219,6 +217,7 @@ public class PlayerShip
         
         GL11.glLineWidth(2.0f);
         GL11.glBegin(GL11.GL_LINES);
+        {
             GL11.glColor3f(1, 0.5f, 0.5f);
             GL11.glVertex3f(0, 0, 0);
             GL11.glVertex3f(1, 0, 0);
@@ -230,6 +229,7 @@ public class PlayerShip
             GL11.glColor3f(0.5f, 0.5f, 1);
             GL11.glVertex3f(0, 0, 0);
             GL11.glVertex3f(0, 0, 1);
+        }
         GL11.glEnd();
         
         // Set width to a single line
@@ -273,25 +273,25 @@ public class PlayerShip
         GL11.glPopMatrix();
         
         // Render the shadow (view-volume)
-        // Note: we render the shadow independant of the model's translation and rotation
-        // THOUGH NOTE: we do translate the shadow up a tiny bit off the ground so it doesnt z-fight
+        // Note: we render the shadow independent of the model's translation and rotation
+        // THOUGH NOTE: we do translate the shadow up a tiny bit off the ground so it doesn't z-fight
         GL11.glPushMatrix();
-        
+        {
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
             GL11.glPolygonOffset(-1.0f, -1.0f);
-            
+
             GL11.glTranslatef(0, 0.001f, 0);
             renderShadow(Position);
-            
+
             GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
-            
+        }
         GL11.glPopMatrix();
     }
     
     public void renderShadow(Vector3f Translation)
     {
         // Explicitly copy...
-        List<Vector3f> vertices = new ArrayList<Vector3f>();
+        List<Vector3f> vertices = new ArrayList<>();
         for(Vector3f Vertex : model.vertices)
         {
             // Apply rotation then translation
@@ -373,7 +373,7 @@ public class PlayerShip
         Quaternion resQuat = new Quaternion();
         
         Quaternion.mul(vecQuat, QConjugate, resQuat);
-	Quaternion.mul(Q, resQuat, resQuat);
+	    Quaternion.mul(Q, resQuat, resQuat);
         
         // Apply the distances again..
         vt.x = resQuat.x * Distance;
