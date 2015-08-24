@@ -62,6 +62,7 @@ public class Main {
             main.run();
         } catch (Exception ex) {
             System.out.println("Error: " + ex.toString());
+            ex.printStackTrace();
         } finally {
             if (main != null) {
                 main.destroy();
@@ -134,10 +135,24 @@ public class Main {
         UI = new UserInterface();
     }
 
+    private void initGL() {
+        // 2D Scene
+        glViewport(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        GLU.gluOrtho2D(0.0f, (float)DISPLAY_WIDTH, (float)DISPLAY_HEIGHT, 0.0f);
+        glMatrixMode(GL_MODELVIEW);
+
+        // Set depth buffer elements
+        glDisable(GL_DEPTH_TEST);
+    }
+
     private void destroy() {
         /* GLFW has to be terminated or else the application will run in background */
         // Terminate GLFW and release the GLFWerrorfun
         glfwTerminate();
+        keyCallback.release();
         errorCallback.release();
     }
 
@@ -152,14 +167,14 @@ public class Main {
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
         while (glfwWindowShouldClose(window) == GL_FALSE) {
-            update();
-            render();
-
             glfwSwapBuffers(window);    // swap the color buffers
 
             // Poll for window events. The key callback above will only be
             // invoked during this call.
             glfwPollEvents();
+
+            update();
+            render();
         }
 
         // Release window and window callbacks
@@ -167,13 +182,7 @@ public class Main {
         keyCallback.release();
     }
 
-    public void update()
-    {
-        TestShip.Update();
-    }
-
-    public void render()
-    {
+    private void render() {
         // Clear screen and load up the 3D matrix state
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
@@ -225,12 +234,7 @@ public class Main {
         UI.Render(TestShip.GetRealVelocity(), TestShip.GetTargetVelocity(), TestShip.VEL_MAX);
     }
 
-    private void initGL() {
-        // 2D Initialization
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // Black
-        glDisable(GL_DEPTH_TEST);
-    }
-
+    // 3D mode
     private void resizeGL() {
         // 3D Scene
         glViewport(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -246,6 +250,7 @@ public class Main {
         glDepthFunc(GL_LEQUAL);
     }
 
+    // 2D mode
     private void resizeGL2D() {
         // 2D Scene
         glViewport(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -259,4 +264,7 @@ public class Main {
         glDisable(GL_DEPTH_TEST);
     }
 
+    private void update() {
+        TestShip.Update();
+    }
 }

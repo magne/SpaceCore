@@ -1,11 +1,14 @@
 package org.codehive.spacecore;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.vector.*;
+import org.lwjgl.util.vector.Quaternion;
+import org.lwjgl.util.vector.Vector3f;
+import org.lwjgl.util.vector.Vector4f;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +23,7 @@ public class PlayerShip
     // Global position and local vectors
     private Vector3f Position;
     private Vector3f Forward, Up, Right;
-    
+
     // Pitch and rolls
     private float Pitch, Roll;
 
@@ -44,7 +47,7 @@ public class PlayerShip
     boolean Bounced;
     boolean Crashed;
     
-    // Constructor does nothign
+    // Constructor does nothing
     public PlayerShip()
     {
         // Default data
@@ -85,45 +88,37 @@ public class PlayerShip
 
             switch (key) {
                 // Changing pitch and roll (Pitch is on Z axis)
-                case GLFW.GLFW_KEY_W:
-                case GLFW.GLFW_KEY_DOWN:
+                case GLFW.GLFW_KEY_W :
                     dPitch -= 0.03;
                     break;
-                case GLFW.GLFW_KEY_S:
-                case GLFW.GLFW_KEY_UP:
+                case GLFW.GLFW_KEY_S :
                     dPitch += 0.03;
                     break;
-
-                // Roll is on post-pitch X axis
-                case GLFW.GLFW_KEY_A:
-                case GLFW.GLFW_KEY_LEFT:
+                case GLFW.GLFW_KEY_A :
                     dRoll += 0.05;
                     break;
-                case GLFW.GLFW_KEY_D:
-                case GLFW.GLFW_KEY_RIGHT:
+                case GLFW.GLFW_KEY_D :
                     dRoll -= 0.05;
                     break;
 
                 // Update velocities
-                case GLFW.GLFW_KEY_R:
-                case GLFW.GLFW_KEY_PAGE_UP:
+                case GLFW.GLFW_KEY_R :
                     TargetVelocity += VEL_dMAX;
                     break;
-                case GLFW.GLFW_KEY_F:
-                case GLFW.GLFW_KEY_PAGE_DOWN:
+                case GLFW.GLFW_KEY_F :
                     TargetVelocity -= VEL_dMAX;
                     break;
             }
+
+            // Save the total pitch and roll
+            Pitch += dPitch;
+            Roll += dRoll;
 
             // Bounds check the target velocity
             if(TargetVelocity > VEL_MAX)
                 TargetVelocity = VEL_MAX;
             else if(TargetVelocity < 0.0f)
                 TargetVelocity = 0;
-
-            // Save the total pitch and roll
-            Pitch += dPitch;
-            Roll += dRoll;
         }
     }
     

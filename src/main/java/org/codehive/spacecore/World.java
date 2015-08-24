@@ -1,23 +1,21 @@
 package org.codehive.spacecore;
 
 import org.lwjgl.opengl.GL11;
-import static org.lwjgl.opengl.GL11.*;
 import org.lwjgl.util.vector.Vector3f;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 // Star point
-class StarPoint
-{
+class StarPoint {
     Vector3f Pt = new Vector3f();
     Vector3f Color = new Vector3f();
     float Scale;
 }
 
 // Models to render
-class Models
-{
+class Models {
     Vector3f Pt = new Vector3f();
     Model model;
     float Yaw;
@@ -27,8 +25,7 @@ class Models
  * @author jbridon
  * A very simple world that is always rendered at Y = 0
  */
-public class World
-{
+public class World {
     // Box size
     public static float SkyboxSize = 32.0f;
     public static float WorldSize = 1024.0f;
@@ -39,39 +36,38 @@ public class World
     // Load a bunch of objects
     List<Models> ModelList;
 
-    public World()
-    {
+    public World() {
         // Create a list and fill with a bunch of stars
-        StarList = new ArrayList();
+        StarList = new ArrayList<>(1000);
         for(int i = 0; i < 1000; i++)
         {
             // New star
-            StarPoint Star = new StarPoint();
+            StarPoint star = new StarPoint();
 
             // New position
             double u = 2f * Math.random() - 1f;
             double v = Math.random() * 2 * Math.PI;
 
-            Star.Pt.x = (float)(Math.sqrt(1f - Math.pow(u, 2.0)) * Math.cos(v));
-            Star.Pt.z = (float)(Math.sqrt(1f - Math.pow(u, 2.0)) * Math.sin(v));
-            Star.Pt.y = (float)Math.abs(u);
-            Star.Pt.scale(SkyboxSize / 2); // Scale out from the center
+            star.Pt.x = (float)(Math.sqrt(1f - Math.pow(u, 2.0)) * Math.cos(v));
+            star.Pt.z = (float)(Math.sqrt(1f - Math.pow(u, 2.0)) * Math.sin(v));
+            star.Pt.y = (float)Math.abs(u);
+            star.Pt.scale(SkyboxSize / 2); // Scale out from the center
 
             // Scale up
-            Star.Scale = 3f * (float)Math.random();
+            star.Scale = 3f * (float)Math.random();
 
             // Color
             float Gray = 0.5f + 0.5f * (float)Math.random();
-            Star.Color.x = Gray;
-            Star.Color.y = Gray;
-            Star.Color.z = Gray;
+            star.Color.x = Gray;
+            star.Color.y = Gray;
+            star.Color.z = Gray;
 
             // Push star into list
-            StarList.add(Star);
+            StarList.add(star);
         }
 
         // Load a bunch of models
-        ModelList = new ArrayList();
+        ModelList = new ArrayList<>();
 
         // Load road strip
         Models model = new Models();
@@ -79,13 +75,12 @@ public class World
         model.Yaw = 0f;
         ModelList.add(model);
 
-        // Load a bunch of rocks..
-        for(int i = 0; i < 100; i++)
-        {
-            int Index = (int)(Math.random() * 5f) + 1;
+        // Load a bunch of rocks...
+        for (int i = 0; i < 100; i++) {
+            int index = (int)(Math.random() * 5f) + 1;
 
             Models newModel = new Models();
-            newModel.model = OBJLoader.load("resources/spacecore/Rock" + Index + ".obj");
+            newModel.model = OBJLoader.load("resources/spacecore/Rock" + index + ".obj");
             newModel.Yaw = (float)(Math.random() * 2.0 * Math.PI);
 
             newModel.Pt.x = (float)(Math.random() * 2.0 - 1.0) * SkyboxSize;
@@ -97,14 +92,13 @@ public class World
     }
 
     // Render the ship
-    public void Render(Vector3f Pos, float Yaw)
-    {
+    public void Render(Vector3f pos, float yaw) {
         // Rotate (yaw) as needed so the player always faces non-corners
         GL11.glPushMatrix();
         {
             // Rotate and translate
-            GL11.glTranslatef(Pos.x, Pos.y, Pos.z);
-            GL11.glRotatef(Yaw, 0f, 1f, 0f);
+            GL11.glTranslatef(pos.x, pos.y, pos.z);
+            GL11.glRotatef(yaw, 0f, 1f, 0f);
 
             // Render the skybox and stars
             RenderSkybox();
@@ -116,7 +110,7 @@ public class World
         GL11.glPushMatrix();
         {
             // Show stars
-            GL11.glTranslatef(Pos.x, Pos.y * 0.99f, Pos.z);
+            GL11.glTranslatef(pos.x, pos.y * 0.99f, pos.z);
             RenderStars();
         }
         // Be done
@@ -126,41 +120,39 @@ public class World
         GL11.glPushMatrix();
         {
             // Render ground and right below
-            GL11.glTranslatef(Pos.x, 0, Pos.z);
+            GL11.glTranslatef(pos.x, 0, pos.z);
 
-            Vector3f Color = new Vector3f(236.0f / 255.0f, 200.0f / 255.0f, 122.0f / 255.0f);
-            RenderGround(WorldSize, Color);
+            Vector3f color = new Vector3f(236.0f / 255.0f, 200.0f / 255.0f, 122.0f / 255.0f);
+            RenderGround(WorldSize, color);
         }
         GL11.glPopMatrix();
 
         // Render all the objects
-        for(Models model : ModelList)
-        {
+        for (Models model : ModelList) {
             GL11.glPushMatrix();
-
-            // Render ground and right below
-            GL11.glTranslatef(model.Pt.x, model.Pt.y, model.Pt.z);
-            GL11.glRotatef((float)Math.toDegrees(model.Yaw), 0, 1, 0);
-            RenderModel(model.model);
-
+            {
+                // Render ground and right below
+                GL11.glTranslatef(model.Pt.x, model.Pt.y, model.Pt.z);
+                GL11.glRotatef((float) Math.toDegrees(model.Yaw), 0, 1, 0);
+                RenderModel(model.model);
+            }
             GL11.glPopMatrix();
         }
     }
 
     // Draw the bottom level
-    public void RenderGround(float WorldLength, Vector3f Color)
-    {
+    private void RenderGround(float worldSize, Vector3f color) {
         // Translate to position
         GL11.glPushMatrix();
 
         // Set the ship color to red for now
-        GL11.glColor3f(Color.x, Color.y, Color.z);
+        GL11.glColor3f(color.x, color.y, color.z);
         GL11.glBegin(GL11.GL_QUADS);
         {
-            GL11.glVertex3f(-WorldLength, 0, -WorldLength);
-            GL11.glVertex3f(WorldLength, 0, -WorldLength);
-            GL11.glVertex3f(WorldLength, 0, WorldLength);
-            GL11.glVertex3f(-WorldLength, 0, WorldLength);
+            GL11.glVertex3f(-worldSize, 0, -worldSize);
+            GL11.glVertex3f(worldSize, 0, -worldSize);
+            GL11.glVertex3f(worldSize, 0, worldSize);
+            GL11.glVertex3f(-worldSize, 0, worldSize);
         }
         GL11.glEnd();
 
@@ -168,108 +160,89 @@ public class World
         GL11.glPopMatrix();
     }
 
-    // Render the
-    public void RenderSkybox()
-    {
+    private void RenderSkybox() {
         // Define the top and bottom color
-        Vector3f TopColor = new Vector3f(204f / 255f, 255f / 255f, 255f / 255f);
-        Vector3f BottomColor = new Vector3f(207f / 255f, 179f / 255f, 52f / 255f);
+        Vector3f topColor = new Vector3f(204f / 255f, 255f / 255f, 255f / 255f);
+        Vector3f bottomColor = new Vector3f(207f / 255f, 179f / 255f, 52f / 255f);
 
         // Save matrix
-        glPushMatrix();
+        GL11.glPushMatrix();
 
         // Draw out top side
-        glBegin(GL_QUADS);
+        GL11.glBegin(GL11.GL_QUADS);
         {
-            // Polygon & texture map
+            // Polygon and texture map
             // Top has one constant color
-            glColor3f(TopColor.x, TopColor.y, TopColor.z);
-            glVertex3f(-SkyboxSize, SkyboxSize, -SkyboxSize);
-            glVertex3f(SkyboxSize, SkyboxSize, -SkyboxSize);
-            glVertex3f(SkyboxSize, SkyboxSize, SkyboxSize);
-            glVertex3f(-SkyboxSize, SkyboxSize, SkyboxSize);
+            GL11.glColor3f(topColor.x, topColor.y, topColor.z);
+            GL11.glVertex3f(SkyboxSize, SkyboxSize, -SkyboxSize);
+            GL11.glColor3f(bottomColor.x, bottomColor.y, bottomColor.z);
+            GL11.glVertex3f(SkyboxSize, -SkyboxSize, -SkyboxSize);
+            GL11.glVertex3f(SkyboxSize, -SkyboxSize, SkyboxSize);
+            GL11.glColor3f(topColor.x, topColor.y, topColor.z);
+            GL11.glVertex3f(SkyboxSize, SkyboxSize, SkyboxSize);
         }
-        glEnd();
+        GL11.glEnd();
 
-        // Drow out the left side
-        glBegin(GL_QUADS);
+        // Draw out the right side
+        GL11.glBegin(GL11.GL_QUADS);
         {
             // Polygon & texture map
-            glColor3f(TopColor.x, TopColor.y, TopColor.z);
-            glVertex3f(SkyboxSize, SkyboxSize, -SkyboxSize);
-            glColor3f(BottomColor.x, BottomColor.y, BottomColor.z);
-            glVertex3f(SkyboxSize, -SkyboxSize, -SkyboxSize);
-            glVertex3f(SkyboxSize, -SkyboxSize, SkyboxSize);
-            glColor3f(TopColor.x, TopColor.y, TopColor.z);
-            glVertex3f(SkyboxSize, SkyboxSize, SkyboxSize);
+            GL11.glColor3f(topColor.x, topColor.y, topColor.z);
+            GL11.glVertex3f(-SkyboxSize, SkyboxSize, SkyboxSize);
+            GL11.glColor3f(bottomColor.x, bottomColor.y, bottomColor.z);
+            GL11.glVertex3f(-SkyboxSize, -SkyboxSize, SkyboxSize);
+            GL11.glVertex3f(-SkyboxSize, -SkyboxSize, -SkyboxSize);
+            GL11.glColor3f(topColor.x, topColor.y, topColor.z);
+            GL11.glVertex3f(-SkyboxSize, SkyboxSize, -SkyboxSize);
         }
-        glEnd();
+        GL11.glEnd();
 
-        // Drow out the right side
-        glBegin(GL_QUADS);
+        // Draw out the front side
+        GL11.glBegin(GL11.GL_QUADS);
         {
             // Polygon & texture map
-            glColor3f(TopColor.x, TopColor.y, TopColor.z);
-            glVertex3f(-SkyboxSize, SkyboxSize, SkyboxSize);
-            glColor3f(BottomColor.x, BottomColor.y, BottomColor.z);
-            glVertex3f(-SkyboxSize, -SkyboxSize, SkyboxSize);
-            glVertex3f(-SkyboxSize, -SkyboxSize, -SkyboxSize);
-            glColor3f(TopColor.x, TopColor.y, TopColor.z);
-            glVertex3f(-SkyboxSize, SkyboxSize, -SkyboxSize);
+            GL11.glColor3f(topColor.x, topColor.y, topColor.z);
+            GL11.glVertex3f(SkyboxSize, SkyboxSize, SkyboxSize);
+            GL11.glColor3f(bottomColor.x, bottomColor.y, bottomColor.z);
+            GL11.glVertex3f(SkyboxSize, -SkyboxSize, SkyboxSize);
+            GL11.glVertex3f(-SkyboxSize, -SkyboxSize, SkyboxSize);
+            GL11.glColor3f(topColor.x, topColor.y, topColor.z);
+            GL11.glVertex3f(-SkyboxSize, SkyboxSize, SkyboxSize);
         }
-        glEnd();
+        GL11.glEnd();
 
-        // Drow out the front side
-        glBegin(GL_QUADS);
+        // Draw out the back side
+        GL11.glBegin(GL11.GL_QUADS);
         {
             // Polygon & texture map
-            glColor3f(TopColor.x, TopColor.y, TopColor.z);
-            glVertex3f(SkyboxSize, SkyboxSize, SkyboxSize);
-            glColor3f(BottomColor.x, BottomColor.y, BottomColor.z);
-            glVertex3f(SkyboxSize, -SkyboxSize, SkyboxSize);
-            glVertex3f(-SkyboxSize, -SkyboxSize, SkyboxSize);
-            glColor3f(TopColor.x, TopColor.y, TopColor.z);
-            glVertex3f(-SkyboxSize, SkyboxSize, SkyboxSize);
+            GL11.glColor3f(topColor.x, topColor.y, topColor.z);
+            GL11.glVertex3f(-SkyboxSize, SkyboxSize, -SkyboxSize);
+            GL11.glColor3f(bottomColor.x, bottomColor.y, bottomColor.z);
+            GL11.glVertex3f(-SkyboxSize, -SkyboxSize, -SkyboxSize);
+            GL11.glVertex3f(SkyboxSize, -SkyboxSize, -SkyboxSize);
+            GL11.glColor3f(topColor.x, topColor.y, topColor.z);
+            GL11.glVertex3f(SkyboxSize, SkyboxSize, -SkyboxSize);
         }
-        glEnd();
-
-        // Drow out the back side
-        glBegin(GL_QUADS);
-        {
-            // Polygon & texture map
-            glColor3f(TopColor.x, TopColor.y, TopColor.z);
-            glVertex3f(-SkyboxSize, SkyboxSize, -SkyboxSize);
-            glColor3f(BottomColor.x, BottomColor.y, BottomColor.z);
-            glVertex3f(-SkyboxSize, -SkyboxSize, -SkyboxSize);
-            glVertex3f(SkyboxSize, -SkyboxSize, -SkyboxSize);
-            glColor3f(TopColor.x, TopColor.y, TopColor.z);
-            glVertex3f(SkyboxSize, SkyboxSize, -SkyboxSize);
-        }
-        glEnd();
+        GL11.glEnd();
 
         // Place back matrix
-        glPopMatrix();
+        GL11.glPopMatrix();
     }
 
-    // Render the stars
-    public void RenderStars()
-    {
+    private void RenderStars() {
         // Render all stars
         for(StarPoint Star : StarList)
         {
-            glPointSize(Star.Scale);
-            glColor3f(Star.Color.x, Star.Color.y, Star.Color.z);
-            glBegin(GL_POINTS);
-            {
-                glVertex3f(Star.Pt.x, Star.Pt.y, Star.Pt.z);
-            }
-            glEnd();
+            GL11.glPointSize(Star.Scale);
+            GL11.glColor3f(Star.Color.x, Star.Color.y, Star.Color.z);
+            GL11.glBegin(GL11.GL_POINTS);
+            GL11.glVertex3f(Star.Pt.x, Star.Pt.y, Star.Pt.z);
+            GL11.glEnd();
         }
     }
 
     // Render a model or shape
-    public void RenderModel(Model model)
-    {
+    private void RenderModel(Model model) {
         // Set width to a single line
         GL11.glLineWidth(1);
 
