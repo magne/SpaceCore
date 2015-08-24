@@ -89,23 +89,29 @@ public class PlayerShip
             switch (key) {
                 // Changing pitch and roll (Pitch is on Z axis)
                 case GLFW.GLFW_KEY_W :
+                case GLFW.GLFW_KEY_UP :
                     dPitch -= 0.03;
                     break;
                 case GLFW.GLFW_KEY_S :
+                case GLFW.GLFW_KEY_DOWN :
                     dPitch += 0.03;
                     break;
                 case GLFW.GLFW_KEY_A :
+                case GLFW.GLFW_KEY_LEFT :
                     dRoll += 0.05;
                     break;
                 case GLFW.GLFW_KEY_D :
+                case GLFW.GLFW_KEY_RIGHT :
                     dRoll -= 0.05;
                     break;
 
                 // Update velocities
                 case GLFW.GLFW_KEY_R :
+                case GLFW.GLFW_KEY_PAGE_UP :
                     TargetVelocity += VEL_dMAX;
                     break;
                 case GLFW.GLFW_KEY_F :
+                case GLFW.GLFW_KEY_PAGE_DOWN :
                     TargetVelocity -= VEL_dMAX;
                     break;
             }
