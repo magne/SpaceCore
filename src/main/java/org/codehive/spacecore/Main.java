@@ -1,17 +1,17 @@
 package org.codehive.spacecore;
 
 import loader.SharedLibraryLoader;
+import org.joml.Matrix4f;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import org.lwjgl.glfw.GLFWvidmode;
 import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
-import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Vector3f;
 
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 
 import static org.lwjgl.glfw.Callbacks.errorCallbackPrint;
 import static org.lwjgl.glfw.GLFW.*;
@@ -42,6 +42,8 @@ public class Main {
     Vector3f CameraPos = new Vector3f();
     Vector3f CameraTarget = new Vector3f();
     Vector3f CameraUp = new Vector3f();
+
+    private Matrix4f projection;
 
     // Camera state
     boolean CameraType = false;
@@ -140,8 +142,9 @@ public class Main {
         glViewport(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
         glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        GLU.gluOrtho2D(0.0f, (float)DISPLAY_WIDTH, (float)DISPLAY_HEIGHT, 0.0f);
+        FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+        new Matrix4f().ortho2D(0.0f, DISPLAY_WIDTH, DISPLAY_HEIGHT, 0.0f).get(fb);
+        glLoadMatrixf(fb);
         glMatrixMode(GL_MODELVIEW);
 
         // Set depth buffer elements
@@ -191,7 +194,6 @@ public class Main {
         resizeGL();
 
         // Move camera to right behind the ship
-        //public static void gluLookAt(float eyex, float eyey, float eyez, float centerx, float centery, float centerz, float upx, float upy, float upz)
         Time += 0.001f;
         float CDist = 6;
 
@@ -214,12 +216,17 @@ public class Main {
             if(CameraPos.y < 0.01f)
                 CameraPos.y = 0.01f;
 
-            GLU.gluLookAt(CameraPos.x, CameraPos.y, CameraPos.z, CameraTarget.x, CameraTarget.y, CameraTarget.z, CameraUp.x, CameraUp.y, CameraUp.z);
+            FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+            // TODO transform CameraPos, CameraTarget, CameraUp to JOML Vector3f
+            projection.setLookAt(CameraPos.x, CameraPos.y, CameraPos.z, CameraTarget.x, CameraTarget.y, CameraTarget.z, CameraUp.x, CameraUp.y, CameraUp.z).get(fb);
+            glLoadMatrixf(fb);
         }
         // Overview
         else
         {
-            GLU.gluLookAt(CDist * (float)Math.cos(Time), CDist, CDist * (float)Math.sin(Time), CameraPos.x, CameraPos.y, CameraPos.z, 0, 1, 0);
+            FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+            projection.setLookAt(CDist * (float)Math.cos(Time), CDist, CDist * (float)Math.sin(Time), CameraPos.x, CameraPos.y, CameraPos.z, 0, 1, 0).get(fb);
+            glLoadMatrixf(fb);
         }
 
         // Always face forward
@@ -240,8 +247,10 @@ public class Main {
         glViewport(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
         glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        GLU.gluPerspective(45.0f, ((float) DISPLAY_WIDTH / (float) DISPLAY_HEIGHT), 0.1f, 100.0f);
+        FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+        projection = new Matrix4f();
+        projection.setPerspective(45.0f, ((float) DISPLAY_WIDTH / (float) DISPLAY_HEIGHT), 0.1f, 100.0f).get(fb);
+        glLoadMatrixf(fb);
         glMatrixMode(GL_MODELVIEW);
 
         // Set depth buffer elements
@@ -256,8 +265,9 @@ public class Main {
         glViewport(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
         glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        GLU.gluOrtho2D(0.0f, (float)DISPLAY_WIDTH, (float)DISPLAY_HEIGHT, 0.0f);
+        FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+        new Matrix4f().ortho2D(0.0f, DISPLAY_WIDTH, DISPLAY_HEIGHT, 0.0f).get(fb);
+        glLoadMatrixf(fb);
         glMatrixMode(GL_MODELVIEW);
 
         // Set depth buffer elements
