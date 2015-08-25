@@ -2,13 +2,13 @@ package org.codehive.spacecore;
 
 import loader.SharedLibraryLoader;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import org.lwjgl.glfw.GLFWvidmode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLContext;
-import org.lwjgl.util.vector.Vector3f;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -205,11 +205,11 @@ public class Main {
         {
             // Extend out the camera by length
             Vector3f Dir = new Vector3f();
-            Vector3f.sub(CameraPos, CameraTarget, Dir);
-            Dir.normalise();
-            Dir.scale(4);
+            CameraPos.sub(CameraTarget, Dir);
+            Dir.normalize();
+            Dir.mul(4);
             Dir.y += 0.1f;
-            Vector3f.add(CameraPos, Dir, CameraPos);
+            CameraPos.add(Dir);
             CameraPos.y += 1;
 
             // Little error correction: always make the camera above ground
@@ -218,7 +218,7 @@ public class Main {
 
             FloatBuffer fb = BufferUtils.createFloatBuffer(16);
             // TODO transform CameraPos, CameraTarget, CameraUp to JOML Vector3f
-            projection.setLookAt(CameraPos.x, CameraPos.y, CameraPos.z, CameraTarget.x, CameraTarget.y, CameraTarget.z, CameraUp.x, CameraUp.y, CameraUp.z).get(fb);
+            projection.setLookAt(CameraPos, CameraTarget, CameraUp).get(fb);
             glLoadMatrixf(fb);
         }
         // Overview

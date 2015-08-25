@@ -92,7 +92,7 @@ public class World {
     }
 
     // Render the ship
-    public void Render(Vector3f pos, float yaw) {
+    public void Render(org.joml.Vector3f pos, float yaw) {
         // Rotate (yaw) as needed so the player always faces non-corners
         GL11.glPushMatrix();
         {

@@ -432,7 +432,7 @@ public class PlayerShip
     }
     
     // Get the look vectors for the camera
-    public void GetCameraVectors(Vector3f CameraPos, Vector3f CameraTarget, Vector3f CameraUp)
+    public void GetCameraVectors(org.joml.Vector3f CameraPos, org.joml.Vector3f CameraTarget, org.joml.Vector3f CameraUp)
     {
         // Copy all vectors as needed for the camera
         CameraPos.set(Position.x, Position.y, Position.z);
