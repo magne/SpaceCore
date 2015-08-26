@@ -1,7 +1,7 @@
 package org.codehive.spacecore;
 
+import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.vector.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +51,7 @@ public class World {
             star.Pt.x = (float)(Math.sqrt(1f - Math.pow(u, 2.0)) * Math.cos(v));
             star.Pt.z = (float)(Math.sqrt(1f - Math.pow(u, 2.0)) * Math.sin(v));
             star.Pt.y = (float)Math.abs(u);
-            star.Pt.scale(SkyboxSize / 2); // Scale out from the center
+            star.Pt.mul(SkyboxSize / 2); // Scale out from the center
 
             // Scale up
             star.Scale = 3f * (float)Math.random();

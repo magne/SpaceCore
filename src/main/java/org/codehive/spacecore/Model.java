@@ -1,6 +1,6 @@
 package org.codehive.spacecore;
 
-import org.lwjgl.util.vector.Vector3f;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;

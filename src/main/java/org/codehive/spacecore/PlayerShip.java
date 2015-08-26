@@ -1,10 +1,8 @@
 package org.codehive.spacecore;
+import org.joml.*;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.vector.Quaternion;
-import org.lwjgl.util.vector.Vector3f;
-import org.lwjgl.util.vector.Vector4f;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
@@ -28,7 +26,7 @@ public class PlayerShip
     private float dRoll;
 
     // TEST VARIABLE
-    Quaternion QResult;
+    Quaternionf QResult;
     
     // Ship variable
     Model model;
@@ -65,7 +63,7 @@ public class PlayerShip
         Right = new Vector3f(-1, 0, 0);
         
         // Blah testing...
-        QResult = new Quaternion();
+        QResult = new Quaternionf();
         
         // Default velocities to zero
         RealVelocity = TargetVelocity = 0;
@@ -146,54 +144,54 @@ public class PlayerShip
         
         //forward = unit(forward *  cos(angle) + up * sin(angle));
         //up = right.cross(forward);
-        Forward.scale((float)Math.cos(dPitch));
-        Up.scale((float)Math.sin(dPitch));
-        Forward = Vector3f.add(Forward, Up, null);
-        Up = Vector3f.cross(Right, Forward, null);
-         
+        Forward.mul((float)Math.cos(dPitch));
+        Up.mul((float)Math.sin(dPitch));
+        Forward.add(Up);
+        Right.cross(Forward, Up);
+
         // Normalize
-        Forward.normalise();
-        Up.normalise();
+        Forward.normalize();
+        Up.normalize();
         
         //right = unit(right * cos(angle) + up * sin(angle));
         //up = right.cross(forward);
-        Right.scale((float)Math.cos(dRoll));
-        Up.scale((float)Math.sin(dRoll));
-        Right = Vector3f.add(Right, Up, null);
-        Up = Vector3f.cross(Right, Forward, null);
-        
+        Right.mul((float)Math.cos(dRoll));
+        Up.mul((float)Math.sin(dRoll));
+        Right.add(Up);
+        Right.cross(Forward, Up);
+
         // Normalize
-        Right.normalise();
-        Up.normalise();
+        Right.normalize();
+        Up.normalize();
         
         // Position changes over time based on the forward vector
         // Note we have a tiny bit of lift added
         Vector3f ForwardCopy = new Vector3f(Forward);
-        ForwardCopy.scale(RealVelocity);
-        
+        ForwardCopy.mul(RealVelocity);
+
         // Gravity factor and normalized velocity
         float Gravity = 0.05f;
         float NVelocity = Math.min((RealVelocity / VEL_MAX) * 3, 1); // Note: 4 is to make 1/4 the "total lift" point
         
         // Computer the "up" fource that attempts to counter gravity
         Vector3f TotalUp = new Vector3f(Up);
-        TotalUp.scale(NVelocity * Gravity); // Linear relationship: the faster, the more lift
+        TotalUp.mul(NVelocity * Gravity); // Linear relationship: the faster, the more lift
         TotalUp.y -= Gravity;
         
         // Add the lift component to the forward vector
         //Vector3f.add(ForwardCopy, TotalUp, ForwardCopy);
-        Vector3f.add(Position, ForwardCopy, Position);
-        
+        Position.add(ForwardCopy);
+
         // Build two quats, for a global roll then pitch
-        Quaternion QRoll = new Quaternion();
-        QRoll.setFromAxisAngle(new Vector4f(Forward.x, Forward.y, Forward.z, dRoll));
-        Quaternion QPitch = new Quaternion();
-        QPitch.setFromAxisAngle(new Vector4f(Right.x, Right.y, Right.z, -dPitch));
+        Quaternionf QRoll = new Quaternionf();
+        QRoll.set(new AxisAngle4f(dRoll, Forward));
+        Quaternionf QPitch = new Quaternionf();
+        QPitch.set(new AxisAngle4f(-dPitch, Right));
         
         // Note: we must explicitly multiply out each dQ, not just the total
-        Quaternion.mul(QResult, QRoll, QResult);
-        Quaternion.mul(QResult, QPitch, QResult);
-        QResult.normalise();
+        QResult.mul(QRoll);
+        QResult.mul(QPitch);
+        QResult.normalize();
     }
     
     // Render the ship
@@ -204,11 +202,10 @@ public class PlayerShip
         GL11.glTranslatef(Position.x, Position.y, Position.z);
         
         // Why isn't this a built-in feature of LWJGL
-        float[] QMatrix = new float[16];
-        createMatrix(QMatrix, QResult);
-        
+        Matrix4f QMatrix = QResult.get(new Matrix4f());
+
         FloatBuffer Buffer = BufferUtils.createFloatBuffer(16);
-        Buffer.put(QMatrix);
+        QMatrix.get(Buffer);
         Buffer.position(0);
         
         GL11.glMultMatrixf(Buffer);
@@ -294,8 +291,8 @@ public class PlayerShip
         {
             // Apply rotation then translation
             Vector3f vt = new Vector3f(Vertex);
-            vt = ApplyQuatToPoint(QResult, vt);
-            Vector3f.add(vt, Translation, vt);
+            vt.rotate(QResult);
+            vt.add(Translation);
             vertices.add(vt);
         }
         
@@ -340,97 +337,25 @@ public class PlayerShip
         }
         GL11.glEnd();
     }
-    
-    public Vector3f ApplyQuatToPoint(Quaternion Q, Vector3f vt)
-    {
-        // Just multiply the point against the matrix
-        float[] QMatrix = new float[16];
-        createMatrix(QMatrix, QResult);
-        
-        Vector3f vert = new Vector3f();
-        /*
-        vert.x = QMatrix[0] * vt.x + QMatrix[1] * vt.y + QMatrix[2] * vt.z;
-        vert.y = QMatrix[4] * vt.x + QMatrix[5] * vt.y + QMatrix[6] * vt.z;
-        vert.z = QMatrix[8] * vt.x + QMatrix[9] * vt.y + QMatrix[10] * vt.z;
-        */
-        vert.x = QMatrix[0] * vt.x + QMatrix[4] * vt.y + QMatrix[8] * vt.z;
-        vert.y = QMatrix[1] * vt.x + QMatrix[5] * vt.y + QMatrix[9] * vt.z;
-        vert.z = QMatrix[2] * vt.x + QMatrix[6] * vt.y + QMatrix[10] * vt.z;
-        return vert;
-        
-        /*
-        float Distance = vt.length();
-        Vector3f vn = new Vector3f(vt);
-        vn.normalise();
-        
-        Quaternion vecQuat = new Quaternion(vn.x, vn.y, vn.z, 0.0f);
-        
-        Quaternion QConjugate = new Quaternion();
-        Quaternion.negate(Q, QConjugate);
-        
-        Quaternion resQuat = new Quaternion();
-        
-        Quaternion.mul(vecQuat, QConjugate, resQuat);
-	    Quaternion.mul(Q, resQuat, resQuat);
-        
-        // Apply the distances again..
-        vt.x = resQuat.x * Distance;
-        vt.y = resQuat.y * Distance;
-        vt.z = resQuat.z * Distance;
-        */
-    }
-    
+
     // Returns the intersection point of the vector (described as two points)
     // onto the y=0 plane (or simply the XZ plane)
     public Vector3f getPlaneIntersect(Vector3f vf, Vector3f vi)
     {
-        Vector3f LineDir = Vector3f.sub(vf, vi, null);
-        LineDir.normalise();
+        Vector3f LineDir = new Vector3f(vf).sub(vi);
+        LineDir.normalize();
         
         Vector3f PlaneNormal = new Vector3f(0, 1, 0);
         Vector3f neg_Vi = new Vector3f(-vi.x, -vi.y, -vi.z);
         
-        float d = Vector3f.dot(neg_Vi, PlaneNormal) / Vector3f.dot(LineDir, PlaneNormal);
+        float d = neg_Vi.dot(PlaneNormal) / LineDir.dot(PlaneNormal);
         Vector3f pt = new Vector3f(LineDir);
-        pt.scale(d);
-        Vector3f.add(pt, vi, pt);
+        pt.mul(d);
+        pt.add(vi);
         
         return pt;
     }
-    
-    public void createMatrix(float[] pMatrix, Quaternion q)
-    {
-        // Fill in the rows of the 4x4 matrix, according to the quaternion to matrix equations
 
-        // First row
-        pMatrix[ 0] = 1.0f - 2.0f * ( q.y * q.y + q.z * q.z );
-        pMatrix[ 1] = 2.0f * ( q.x * q.y - q.w * q.z );
-        pMatrix[ 2] = 2.0f * ( q.x * q.z + q.w * q.y );
-        pMatrix[ 3] = 0.0f;
-
-        // Second row
-
-        pMatrix[ 4] = 2.0f * ( q.x * q.y + q.w * q.z );
-        pMatrix[ 5] = 1.0f - 2.0f * ( q.x * q.x + q.z * q.z );
-        pMatrix[ 6] = 2.0f * ( q.y * q.z - q.w * q.x );
-        pMatrix[ 7] = 0.0f;
-
-        // Third row
-
-        pMatrix[ 8] = 2.0f * ( q.x * q.z - q.w * q.y );
-        pMatrix[ 9] = 2.0f * ( q.y * q.z + q.w * q.x );
-        pMatrix[10] = 1.0f - 2.0f * ( q.x * q.x + q.y * q.y );
-        pMatrix[11] = 0.0f;
-
-        // Fourth row
-
-        pMatrix[12] = 0;
-        pMatrix[13] = 0;
-        pMatrix[14] = 0;
-        pMatrix[15] = 1.0f;
-        // Now pMatrix[] is a 4x4 homogeneous matrix that can be applied to an OpenGL Matrix
-    }
-    
     // Get the look vectors for the camera
     public void GetCameraVectors(org.joml.Vector3f CameraPos, org.joml.Vector3f CameraTarget, org.joml.Vector3f CameraUp)
     {
@@ -448,8 +373,8 @@ public class PlayerShip
         Vector3f RFlat = new Vector3f(1f, 0f, 0f);
         
         // Angle between
-        float Ang = Vector3f.angle(RFlat, FFlat);
-        if(Vector3f.cross(RFlat, FFlat, null).y < 0)
+        float Ang = RFlat.angle(FFlat);
+        if (RFlat.cross(FFlat, new Vector3f()).y < 0)
             Ang = (float)(Math.PI * 2.0) - Ang;
         return Ang;
     }
