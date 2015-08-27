@@ -5,25 +5,57 @@ import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 // Star point
 class StarPoint {
     Vector3f Pt = new Vector3f();
     Vector3f Color = new Vector3f();
     float Scale;
+
+    public void Render() {
+        GL11.glPointSize(Scale);
+        GL11.glColor3f(Color.x, Color.y, Color.z);
+        GL11.glBegin(GL11.GL_POINTS);
+        GL11.glVertex3f(Pt.x, Pt.y, Pt.z);
+        GL11.glEnd();
+    }
 }
 
 // Models to render
 class Models {
-    Vector3f Pt = new Vector3f();
-    Model model;
-    float Yaw;
+    private final Model model;
+    private final Vector3f point;
+    private final float yaw;
+
+    public Models(String resource) {
+        this(resource, new Vector3f(), 0.0f);
+    }
+
+    public Models(String resource, Vector3f point, float yaw) {
+        this(OBJLoader.loadResource(resource), point, yaw);
+    }
+
+    public Models(Model model, Vector3f point, float yaw) {
+        this.model = model;
+        this.point = point;
+        this.yaw = yaw;
+    }
+
+    public void Render() {
+        GL11.glPushMatrix();
+        {
+            // Render ground and right below
+            GL11.glTranslatef(point.x, point.y, point.z);
+            GL11.glRotatef((float) Math.toDegrees(yaw), 0, 1, 0);
+            model.Render();
+        }
+        GL11.glPopMatrix();
+    }
 }
 
 /**
  * @author jbridon
- * A very simple world that is always rendered at Y = 0
+ *         A very simple world that is always rendered at Y = 0
  */
 public class World {
     // Box size
@@ -39,8 +71,7 @@ public class World {
     public World() {
         // Create a list and fill with a bunch of stars
         StarList = new ArrayList<>(1000);
-        for(int i = 0; i < 1000; i++)
-        {
+        for (int i = 0; i < 1000; i++) {
             // New star
             StarPoint star = new StarPoint();
 
@@ -48,16 +79,16 @@ public class World {
             double u = 2f * Math.random() - 1f;
             double v = Math.random() * 2 * Math.PI;
 
-            star.Pt.x = (float)(Math.sqrt(1f - Math.pow(u, 2.0)) * Math.cos(v));
-            star.Pt.z = (float)(Math.sqrt(1f - Math.pow(u, 2.0)) * Math.sin(v));
-            star.Pt.y = (float)Math.abs(u);
+            star.Pt.x = (float) (Math.sqrt(1f - Math.pow(u, 2.0)) * Math.cos(v));
+            star.Pt.z = (float) (Math.sqrt(1f - Math.pow(u, 2.0)) * Math.sin(v));
+            star.Pt.y = (float) Math.abs(u);
             star.Pt.mul(SkyboxSize / 2); // Scale out from the center
 
             // Scale up
-            star.Scale = 3f * (float)Math.random();
+            star.Scale = 3f * (float) Math.random();
 
             // Color
-            float Gray = 0.5f + 0.5f * (float)Math.random();
+            float Gray = 0.5f + 0.5f * (float) Math.random();
             star.Color.x = Gray;
             star.Color.y = Gray;
             star.Color.z = Gray;
@@ -70,29 +101,25 @@ public class World {
         ModelList = new ArrayList<>();
 
         // Load road strip
-        Models model = new Models();
-        model.model = OBJLoader.load("resources/spacecore/Road.obj");
-        model.Yaw = 0f;
-        ModelList.add(model);
+        ModelList.add(new Models("spacecore/Road.obj"));
 
         // Load a bunch of rocks...
         for (int i = 0; i < 100; i++) {
-            int index = (int)(Math.random() * 5f) + 1;
+            int index = (int) (Math.random() * 5f) + 1;
 
-            Models newModel = new Models();
-            newModel.model = OBJLoader.load("resources/spacecore/Rock" + index + ".obj");
-            newModel.Yaw = (float)(Math.random() * 2.0 * Math.PI);
-
-            newModel.Pt.x = (float)(Math.random() * 2.0 - 1.0) * SkyboxSize;
-            newModel.Pt.z = (float)(Math.random() * 2.0 - 1.0) * SkyboxSize;
-            newModel.Pt.y = 0f;
-
-            ModelList.add(newModel);
+            String resource = String.format("spacecore/Rock%s.obj", index);
+            Vector3f point = new Vector3f(
+                    (float) (Math.random() * 2.0 - 1.0) * SkyboxSize,
+                    0.0f,
+                    (float) (Math.random() * 2.0 - 1.0) * SkyboxSize
+            );
+            float yaw = (float) (Math.random() * 2.0 * Math.PI);
+            ModelList.add(new Models(resource, point, yaw));
         }
     }
 
     // Render the ship
-    public void Render(org.joml.Vector3f pos, float yaw) {
+    public void Render(Vector3f pos, float yaw) {
         // Rotate (yaw) as needed so the player always faces non-corners
         GL11.glPushMatrix();
         {
@@ -111,7 +138,7 @@ public class World {
         {
             // Show stars
             GL11.glTranslatef(pos.x, pos.y * 0.99f, pos.z);
-            RenderStars();
+            StarList.forEach(StarPoint::Render);
         }
         // Be done
         GL11.glPopMatrix();
@@ -128,16 +155,7 @@ public class World {
         GL11.glPopMatrix();
 
         // Render all the objects
-        for (Models model : ModelList) {
-            GL11.glPushMatrix();
-            {
-                // Render ground and right below
-                GL11.glTranslatef(model.Pt.x, model.Pt.y, model.Pt.z);
-                GL11.glRotatef((float) Math.toDegrees(model.Yaw), 0, 1, 0);
-                RenderModel(model.model);
-            }
-            GL11.glPopMatrix();
-        }
+        ModelList.forEach(Models::Render);
     }
 
     // Draw the bottom level
@@ -227,54 +245,5 @@ public class World {
 
         // Place back matrix
         GL11.glPopMatrix();
-    }
-
-    private void RenderStars() {
-        // Render all stars
-        for(StarPoint Star : StarList)
-        {
-            GL11.glPointSize(Star.Scale);
-            GL11.glColor3f(Star.Color.x, Star.Color.y, Star.Color.z);
-            GL11.glBegin(GL11.GL_POINTS);
-            GL11.glVertex3f(Star.Pt.x, Star.Pt.y, Star.Pt.z);
-            GL11.glEnd();
-        }
-    }
-
-    // Render a model or shape
-    private void RenderModel(Model model) {
-        // Set width to a single line
-        GL11.glLineWidth(1);
-
-        // Change rendermode
-        for(int i = 0; i < 2; i++)
-        {
-            if(i == 0)
-                GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
-            else
-                GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
-
-            // Randomize surface color a bit
-            Random SurfaceRand = new Random(123456);
-
-            GL11.glBegin(GL11.GL_TRIANGLES);
-            for (Face face : model.faces)
-            {
-                // Always make black when in line mode)
-                if(i == 0)
-                    GL11.glColor3f(0.8f, 0.8f, 0.5f + 0.5f * (SurfaceRand.nextFloat()));
-                else
-                    GL11.glColor3f(0.4f, 0.4f, 0.2f + 0.2f * (SurfaceRand.nextFloat()));
-
-                // Randomize the color a tiny bit
-                Vector3f v1 = model.vertices.get((int) face.vertex.x - 1);
-                GL11.glVertex3f(v1.x, v1.y, v1.z);
-                Vector3f v2 = model.vertices.get((int) face.vertex.y - 1);
-                GL11.glVertex3f(v2.x, v2.y, v2.z);
-                Vector3f v3 = model.vertices.get((int) face.vertex.z - 1);
-                GL11.glVertex3f(v3.x, v3.y, v3.z);
-            }
-            GL11.glEnd();
-        }
     }
 }

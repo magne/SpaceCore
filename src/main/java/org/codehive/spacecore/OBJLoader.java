@@ -5,8 +5,8 @@ import org.joml.Vector3f;
 import java.io.*;
 
 public class OBJLoader {
-    public static Model loadModel(File f) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(f));
+    public static Model loadModel(Reader r) throws IOException {
+        BufferedReader reader = new BufferedReader(r);
         Model m = new Model();
         String line;
         while ((line = reader.readLine()) != null) {
@@ -32,14 +32,16 @@ public class OBJLoader {
         return m;
     }
 
-    public static Model load(String fileString) {
-        try {
-            return OBJLoader.loadModel(new File(fileString));
-        } catch (FileNotFoundException e) {
-            System.err.println("File not found: '" + fileString + "'");
+    public static Model loadResource(String name) {
+        final InputStream resource = ClassLoader.getSystemResourceAsStream(name);
+        if (resource == null) {
+            System.err.println(String.format("Resource %s not found", name));
             System.exit(1);
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+        try {
+            return loadModel(new InputStreamReader(resource));
+        } catch (IOException ex) {
+            ex.printStackTrace();
             System.exit(1);
         }
         return null;
